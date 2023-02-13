@@ -12,6 +12,7 @@ import jwt_decode from 'jwt-decode';
 
 import {useDispatch} from 'react-redux';
 import {logoutAction} from '../redux/reducers/authReducers';
+import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 
 import {
   Text,
@@ -36,15 +37,6 @@ import {Formik} from 'formik';
 import * as Yup from 'yup';
 import YupPassword from 'yup-password';
 YupPassword(Yup);
-
-const prpfilSchema = Yup.object({
-  fullName: Yup.string().required('Required'),
-  phone: Yup.string()
-    .min(10, 'min 10 Character')
-    .max(13, 'Max 13 Character')
-    .required('Required'),
-  email: Yup.string().email('Invalid email address').required('Required'),
-});
 
 const resetPasswordSchema = Yup.object({
   password: Yup.string()
@@ -76,14 +68,35 @@ const Profil = () => {
   React.useEffect(() => {
     getProfile();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [user]);
 
   const getProfile = async () => {
     try {
-      const {data} = await http().get('/users/' + userId);
+      const {data} = await http(token).get('/users/' + userId);
       setUser(data.results);
     } catch (error) {
       setUser({});
+    }
+  };
+
+  //update profile
+  const [firstName, setFirstName] = React.useState('');
+  const [phone, setPhone] = React.useState(0);
+  const [email, setEmail] = React.useState('');
+
+  const updateProfile = async () => {
+    try {
+      const form = {
+        firstName: firstName || user.firstName,
+        phone: phone || user.phone,
+        email: email || user.email,
+      };
+      console.log(form);
+      const {data} = await http(token).patch('/users/' + userId, form);
+      setUser(data.results);
+    } catch (error) {
+      console.log('error');
+      console.log(error);
     }
   };
   return (
@@ -123,10 +136,16 @@ const Profil = () => {
             <VStack space={3}>
               <Text color={'yellow.500'}>INFO</Text>
               <Box alignItems={'center'}>
-                <Image source={profil} alt={'cineone'} resizeMode={'contain'} />
+                <Image
+                  source={{uri: user.picture} || profil}
+                  alt={'cineone'}
+                  resizeMode={'contain'}
+                  size={150}
+                  borderRadius={100}
+                />
               </Box>
               <Text color={'#EAE41E'} fontSize={20} textAlign={'center'}>
-                {user.fullName + ' ' + user.lastName}
+                {user.firstName + ' ' + user.lastName}
               </Text>
               <Text color={'yellow.500'} textAlign={'center'}>
                 Moviegoers
@@ -155,91 +174,45 @@ const Profil = () => {
             p={5}
             borderRadius={'10px'}
             my={10}>
-            <Formik
-              validationSchema={prpfilSchema}
-              initialValues={{
-                fullName: '',
-                phone: '',
-                email: '',
-              }}>
-              {({handleChange, handleBlur, handleSubmit, errors, values}) => (
-                <Stack space={3}>
-                  <Box>
-                    <Text color={'#EAE41E'}>Details Informations</Text>
-                    <Box
-                      flex={1}
-                      borderBottomWidth={'1'}
-                      borderBottomColor={'yellow.500'}
-                    />
-                  </Box>
-                  <FormControl isInvalid={errors.fullName}>
-                    <FormControl.Label>
-                      <Text color={'#EAE41E'}>fullName</Text>
-                    </FormControl.Label>
-                    <Input
-                      height={12}
-                      color={'#EAE41E'}
-                      onChangeText={handleChange('fullName')}
-                      onBlur={handleBlur('fullName')}
-                      placeholder={user.fullName + ' ' + user.lastName}
-                      value={values.fullName}
-                    />
-                    {errors.fullName && (
-                      <FormControl.ErrorMessage
-                        leftIcon={<WarningOutlineIcon size="xs" />}>
-                        {errors.fullName}
-                      </FormControl.ErrorMessage>
-                    )}
-                  </FormControl>
-                  <FormControl isInvalid={errors.phone}>
-                    <FormControl.Label>
-                      <Text color={'#EAE41E'}>phone</Text>
-                    </FormControl.Label>
-                    <InputGroup>
-                      <InputLeftAddon children={'+62'} />
-                      <Input
-                        height={12}
-                        w={'85%'}
-                        color={'#EAE41E'}
-                        onChangeText={handleChange('phone')}
-                        onBlur={handleBlur('phone')}
-                        placeholder={user.phone}
-                        value={values.phone}
-                      />
-                    </InputGroup>
-
-                    {errors.phone && (
-                      <FormControl.ErrorMessage
-                        leftIcon={<WarningOutlineIcon size="xs" />}>
-                        {errors.phone}
-                      </FormControl.ErrorMessage>
-                    )}
-                  </FormControl>
-                  <FormControl isInvalid={errors.email}>
-                    <FormControl.Label>
-                      <Text color={'#EAE41E'}>email</Text>
-                    </FormControl.Label>
-                    <Input
-                      height={12}
-                      color={'#EAE41E'}
-                      onChangeText={handleChange('email')}
-                      onBlur={handleBlur('email')}
-                      placeholder={user.email}
-                      value={values.email}
-                    />
-                    {errors.email && (
-                      <FormControl.ErrorMessage
-                        leftIcon={<WarningOutlineIcon size="xs" />}>
-                        {errors.email}
-                      </FormControl.ErrorMessage>
-                    )}
-                  </FormControl>
-                </Stack>
-              )}
-            </Formik>
+            <Stack space={3}>
+              <Box>
+                <Text color={'#EAE41E'}>Details Informations</Text>
+                <Box
+                  flex={1}
+                  borderBottomWidth={'1'}
+                  borderBottomColor={'yellow.500'}
+                />
+              </Box>
+              <Text color={'#EAE41E'}>firstName</Text>
+              <Input
+                height={12}
+                color={'#EAE41E'}
+                onChangeText={value => setFirstName(value)}
+                defaultValue={user.firstName}
+              />
+              <Text color={'#EAE41E'}>phone</Text>
+              <InputGroup>
+                <InputLeftAddon children={'+62'} />
+                <Input
+                  height={12}
+                  w={'85%'}
+                  color={'#EAE41E'}
+                  onChangeText={value => setPhone(value)}
+                  defaultValue={user.phone}
+                />
+              </InputGroup>
+              <Text color={'#EAE41E'}>email</Text>
+              <Input
+                height={12}
+                color={'#EAE41E'}
+                onChangeText={value => setEmail(value)}
+                defaultValue={user.email}
+              />
+            </Stack>
           </VStack>
           <Button
-            onPress={() => navigation.navigate('Profil')}
+            // onPress={() => navigation.navigate('Profil')}
+            onPress={updateProfile}
             bgColor={'#EAE41E'}
             _pressed={{bgColor: 'yellow.500'}}>
             <Text color={'black'}>Update changes</Text>
@@ -252,7 +225,7 @@ const Profil = () => {
             borderRadius={'10px'}
             my={10}>
             <Formik
-              validationSchema={prpfilSchema}
+              validationSchema={resetPasswordSchema}
               initialValues={{
                 password: '',
                 confirmPassword: '',

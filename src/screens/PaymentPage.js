@@ -24,9 +24,13 @@ import {
   WarningOutlineIcon,
   InputGroup,
   InputLeftAddon,
+  Pressable,
 } from 'native-base';
 
 import {useNavigation} from '@react-navigation/native';
+import {useSelector, useDispatch} from 'react-redux';
+import http from '../helpers/http';
+import {clearTransaction} from '../redux/reducers/transactionReducers';
 
 import {Formik} from 'formik';
 import * as Yup from 'yup';
@@ -34,16 +38,56 @@ import YupPassword from 'yup-password';
 YupPassword(Yup);
 
 const paymentSchema = Yup.object({
-  fullName: Yup.string().required('Required'),
-  phone: Yup.string()
-    .min(10, 'min 10 Character')
-    .max(13, 'Max 13 Character')
-    .required('Required'),
-  email: Yup.string().email('Invalid email address').required('Required'),
+  fullName: Yup.string(),
+  phone: Yup.string().min(10, 'min 10 Character').max(13, 'Max 13 Character'),
+  email: Yup.string().email('Invalid email address'),
 });
 
 const PaymentPage = () => {
+  const token = useSelector(state => state.auth.token);
   const navigation = useNavigation();
+  const dispatch = useDispatch();
+  const transaction = useSelector(state => state.transaction);
+  const [payment, setPayment] = React.useState(0);
+  const [personal, setPersonal] = React.useState({});
+
+  React.useEffect(() => {
+    getProfil();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // get profile
+  const getProfil = async () => {
+    try {
+      const {data} = await http(token).get('/users/' + transaction.idUser);
+      setPersonal(data.results);
+    } catch (error) {
+      setPersonal({});
+    }
+  };
+
+  //wantpay submit
+
+  const submitPay = async (value, paymentMethod) => {
+    try {
+      const wantPay = {
+        ...transaction,
+        idPayment: paymentMethod,
+        seat: transaction.seat.toString(),
+        fullName:
+          value.fullName || personal.firstName + ' ' + personal.lastName,
+        email: value.email || personal?.email,
+        phone: value.phone || personal?.phone,
+      };
+      const {data} = await http(token).post('/orders/', wantPay);
+      console.log(data.results);
+      dispatch(clearTransaction());
+      navigation.navigate('OrderHistory');
+    } catch (error) {
+      console.log('error');
+      console.log(error);
+    }
+  };
   return (
     <Box>
       <ScrollView>
@@ -53,7 +97,7 @@ const PaymentPage = () => {
             Total Payment
           </Text>
           <Text color={'#EAE41E'} fontSize={18} fontWeight={'bold'}>
-            $30.00
+            $ {transaction.total}
           </Text>
         </HStack>
         <Box bgColor={'#18181B'} px={5} py={10}>
@@ -67,7 +111,9 @@ const PaymentPage = () => {
             borderRadius={'10px'}
             my={10}>
             <HStack space={3}>
-              <Box
+              <Pressable
+                onPress={() => setPayment(1)}
+                bgColor={payment === 1 ? 'yellow.500' : 'black'}
                 w={'1/4'}
                 h={10}
                 flex={1}
@@ -83,8 +129,10 @@ const PaymentPage = () => {
                   alt={'logo'}
                   resizeMode={'center'}
                 />
-              </Box>
-              <Box
+              </Pressable>
+              <Pressable
+                onPress={() => setPayment(2)}
+                bgColor={payment === 2 ? 'yellow.500' : 'black'}
                 w={'1/4'}
                 h={10}
                 flex={1}
@@ -100,8 +148,10 @@ const PaymentPage = () => {
                   alt={'logo'}
                   resizeMode={'center'}
                 />
-              </Box>
-              <Box
+              </Pressable>
+              <Pressable
+                onPress={() => setPayment(3)}
+                bgColor={payment === 3 ? 'yellow.500' : 'black'}
                 w={'1/4'}
                 h={10}
                 flex={1}
@@ -117,10 +167,12 @@ const PaymentPage = () => {
                   alt={'logo'}
                   resizeMode={'center'}
                 />
-              </Box>
+              </Pressable>
             </HStack>
             <HStack space={3}>
-              <Box
+              <Pressable
+                onPress={() => setPayment(4)}
+                bgColor={payment === 4 ? 'yellow.500' : 'black'}
                 w={'1/4'}
                 h={10}
                 flex={1}
@@ -136,8 +188,10 @@ const PaymentPage = () => {
                   alt={'logo'}
                   resizeMode={'center'}
                 />
-              </Box>
-              <Box
+              </Pressable>
+              <Pressable
+                onPress={() => setPayment(5)}
+                bgColor={payment === 5 ? 'yellow.500' : 'black'}
                 w={'1/4'}
                 h={10}
                 flex={1}
@@ -153,8 +207,10 @@ const PaymentPage = () => {
                   alt={'logo'}
                   resizeMode={'center'}
                 />
-              </Box>
-              <Box
+              </Pressable>
+              <Pressable
+                onPress={() => setPayment(6)}
+                bgColor={payment === 6 ? 'yellow.500' : 'black'}
                 w={'1/4'}
                 h={10}
                 flex={1}
@@ -170,7 +226,7 @@ const PaymentPage = () => {
                   alt={'logo'}
                   resizeMode={'center'}
                 />
-              </Box>
+              </Pressable>
             </HStack>
             <HStack space={3}>
               <Box
@@ -195,94 +251,120 @@ const PaymentPage = () => {
           <Text color={'#EAE41E'} fontSize={18}>
             Personal Info
           </Text>
-          <VStack
+          {/* <VStack
             bgColor={'black'}
             space={5}
             p={5}
             borderRadius={'10px'}
-            my={10}>
-            <Formik
-              validationSchema={paymentSchema}
-              initialValues={{
-                fullName: '',
-                phone: '',
-                email: '',
-              }}>
-              {({handleChange, handleBlur, handleSubmit, errors, values}) => (
-                <Stack space={3}>
-                  <FormControl isInvalid={errors.fullName}>
-                    <FormControl.Label>
-                      <Text color={'#EAE41E'}>fullName</Text>
-                    </FormControl.Label>
-                    <Input
-                      height={12}
-                      color={'#EAE41E'}
-                      onChangeText={handleChange('fullName')}
-                      onBlur={handleBlur('fullName')}
-                      placeholder="Write your First Name"
-                      value={values.fullName}
-                    />
-                    {errors.fullName && (
-                      <FormControl.ErrorMessage
-                        leftIcon={<WarningOutlineIcon size="xs" />}>
-                        {errors.fullName}
-                      </FormControl.ErrorMessage>
-                    )}
-                  </FormControl>
-                  <FormControl isInvalid={errors.phone}>
-                    <FormControl.Label>
-                      <Text color={'#EAE41E'}>phone</Text>
-                    </FormControl.Label>
-                    <InputGroup>
-                      <InputLeftAddon children={'+62'} />
+            my={10}> */}
+          <Formik
+            validationSchema={paymentSchema}
+            initialValues={{
+              fullName: '',
+              phone: '',
+              email: '',
+            }}
+            onSubmit={values => {
+              submitPay(values, payment);
+            }}>
+            {({handleChange, handleBlur, handleSubmit, errors, values}) => (
+              <>
+                <VStack
+                  bgColor={'black'}
+                  space={5}
+                  p={5}
+                  borderRadius={'10px'}
+                  my={10}>
+                  <Stack space={3}>
+                    <FormControl isInvalid={errors.fullName}>
+                      <FormControl.Label>
+                        <Text color={'#EAE41E'}>fullName</Text>
+                      </FormControl.Label>
                       <Input
                         height={12}
-                        w={'85%'}
                         color={'#EAE41E'}
-                        onChangeText={handleChange('phone')}
-                        onBlur={handleBlur('phone')}
-                        placeholder="Write your Phone"
-                        value={values.phone}
+                        onChangeText={handleChange('fullName')}
+                        onBlur={handleBlur('fullName')}
+                        defaultValue={
+                          personal.firstName + ' ' + personal.lastName
+                        }
+                        // value={
+                        //   values.fullName ||
+                        //   personal.firstName + ' ' + personal.lastName
+                        // }
                       />
-                    </InputGroup>
+                      {errors.fullName && (
+                        <FormControl.ErrorMessage
+                          leftIcon={<WarningOutlineIcon size="xs" />}>
+                          {errors.fullName}
+                        </FormControl.ErrorMessage>
+                      )}
+                    </FormControl>
+                    <FormControl isInvalid={errors.phone}>
+                      <FormControl.Label>
+                        <Text color={'#EAE41E'}>phone</Text>
+                      </FormControl.Label>
+                      <InputGroup>
+                        <InputLeftAddon children={'+62'} />
+                        <Input
+                          height={12}
+                          w={'85%'}
+                          color={'#EAE41E'}
+                          onChangeText={handleChange('phone')}
+                          onBlur={handleBlur('phone')}
+                          placeholder={personal.phone}
+                          defaultValue={personal.phone}
+                          value={values.phone || personal.phone}
+                        />
+                      </InputGroup>
 
-                    {errors.phone && (
-                      <FormControl.ErrorMessage
-                        leftIcon={<WarningOutlineIcon size="xs" />}>
-                        {errors.phone}
-                      </FormControl.ErrorMessage>
-                    )}
-                  </FormControl>
-                  <FormControl isInvalid={errors.email}>
-                    <FormControl.Label>
-                      <Text color={'#EAE41E'}>email</Text>
-                    </FormControl.Label>
-                    <Input
-                      height={12}
-                      color={'#EAE41E'}
-                      onChangeText={handleChange('email')}
-                      onBlur={handleBlur('email')}
-                      placeholder="Write your email"
-                      value={values.email}
-                    />
-                    {errors.email && (
-                      <FormControl.ErrorMessage
-                        leftIcon={<WarningOutlineIcon size="xs" />}>
-                        {errors.email}
-                      </FormControl.ErrorMessage>
-                    )}
-                  </FormControl>
-                </Stack>
-              )}
-            </Formik>
-          </VStack>
-          <Button
+                      {errors.phone && (
+                        <FormControl.ErrorMessage
+                          leftIcon={<WarningOutlineIcon size="xs" />}>
+                          {errors.phone}
+                        </FormControl.ErrorMessage>
+                      )}
+                    </FormControl>
+                    <FormControl isInvalid={errors.email}>
+                      <FormControl.Label>
+                        <Text color={'#EAE41E'}>email</Text>
+                      </FormControl.Label>
+                      <Input
+                        height={12}
+                        color={'#EAE41E'}
+                        onChangeText={handleChange('email')}
+                        onBlur={handleBlur('email')}
+                        placeholder={personal.email}
+                        defaultValue={personal.email}
+                        value={values.email || personal.email}
+                      />
+                      {errors.email && (
+                        <FormControl.ErrorMessage
+                          leftIcon={<WarningOutlineIcon size="xs" />}>
+                          {errors.email}
+                        </FormControl.ErrorMessage>
+                      )}
+                    </FormControl>
+                  </Stack>
+                </VStack>
+                <Button
+                  onPress={handleSubmit}
+                  mt={10}
+                  bgColor={'#EAE41E'}
+                  _pressed={{bgColor: 'yellow.500'}}>
+                  <Text color={'black'}>Pay your Order</Text>
+                </Button>
+              </>
+            )}
+          </Formik>
+          {/* </VStack> */}
+          {/* <Button
             onPress={() => navigation.navigate('OrderHistory')}
             mt={10}
             bgColor={'#EAE41E'}
             _pressed={{bgColor: 'yellow.500'}}>
             <Text color={'black'}>Pay your Order</Text>
-          </Button>
+          </Button> */}
         </Box>
         <Fotter />
       </ScrollView>

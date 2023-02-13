@@ -9,10 +9,20 @@ const transactionReducers = createSlice({
     transaction: (state, action) => {
       state.idUser = action.payload.user;
       state.idMovie = action.payload.movie;
-      state.idPremier = action.payload.premier;
+      state.idPremiere = action.payload.premier;
       state.idLocation = action.payload.location;
-      state.date = action.payload.date;
-      state.idTime = action.payload.time;
+      state.dateAndTime = action.payload.date;
+      state.idShowtime = action.payload.time;
+    },
+    addSeatTransaction: (state, action) => {
+      state.seat = action.payload.seat;
+      state.total = action.payload.total;
+    },
+    addPayment: (state, action) => {
+      state.idPayment = action.payload.paymentMethod;
+      state.fullName = action.payload.fullName;
+      state.phone = action.payload.phone;
+      state.email = action.payload.email;
     },
     clearTransaction: () => {
       return initialState;
@@ -20,6 +30,7 @@ const transactionReducers = createSlice({
   },
 });
 
-export const {transaction} = transactionReducers.actions;
+export const {transaction, addSeatTransaction, addPayment, clearTransaction} =
+  transactionReducers.actions;
 
 export default transactionReducers.reducer;

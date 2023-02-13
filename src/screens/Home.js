@@ -107,13 +107,10 @@ const Home = () => {
                       borderRadius={'10px'}
                       p={5}>
                       <Image
-                        source={{
-                          uri:
-                            'https://res.cloudinary.com/dqyu7zzqx/image/upload/v1674036237/' +
-                            data?.picture +
-                            '.jpg',
-                        }}
+                        source={{uri: data.picture}}
                         alt="kocak"
+                        width={'150px'}
+                        height={'250px'}
                       />
                       {now && (
                         <VStack space={3}>
@@ -285,8 +282,12 @@ const Home = () => {
                     borderColor={'#18181B'}
                     borderRadius={'10px'}
                     p={5}>
-                    <Image source={spiderman} alt={'spiderman'} />
-
+                    <Image
+                      source={{uri: data?.picture}}
+                      alt={'spiderman'}
+                      width={'150px'}
+                      height={'250px'}
+                    />
                     <Text color={'#EAE41E'} textAlign={'center'}>
                       {data.titleMovie}
                     </Text>

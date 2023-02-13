@@ -1,9 +1,13 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React from 'react';
 
 import Navbar from '../components/Navbar';
 import Fotter from '../components/Fotter';
 
 import QR from '../assets/images/qr.png';
+import {useRoute} from '@react-navigation/native';
+import {useSelector} from 'react-redux';
+import http from '../helpers/http';
 
 import {
   Text,
@@ -17,6 +21,28 @@ import {
 } from 'native-base';
 
 const TicketResult = () => {
+  const token = useSelector(state => state.auth.token);
+  const route = useRoute();
+  const idOrder = route.params.id;
+
+  //get order tikect
+  const [tickect, setTickect] = React.useState({});
+  const getOrderById = async () => {
+    try {
+      const {data} = await http(token).get('/orders/byIdOrder/' + idOrder);
+      setTickect({
+        ...data.results,
+        count: data.results.seat.split(',').length,
+      });
+    } catch (error) {
+      setTickect({});
+    }
+  };
+
+  React.useEffect(() => {
+    getOrderById();
+  }, []);
+
   return (
     <Box>
       <ScrollView>
@@ -52,19 +78,21 @@ const TicketResult = () => {
                   <Text color={'yellow.500'} fontSize={12}>
                     Movie
                   </Text>
-                  <Text color={'#EAE41E'}>Spider-Man:..</Text>
+                  <Text color={'#EAE41E'}>{tickect?.titleMovie}</Text>
                 </Box>
                 <Box>
                   <Text color={'yellow.500'} fontSize={12}>
                     Date
                   </Text>
-                  <Text color={'#EAE41E'}>07 Jul</Text>
+                  <Text color={'#EAE41E'}>
+                    {new Date(tickect?.dateAndTime).toDateString()}
+                  </Text>
                 </Box>
                 <Box>
                   <Text color={'yellow.500'} fontSize={12}>
                     Count
                   </Text>
-                  <Text color={'#EAE41E'}>3 pcs</Text>
+                  <Text color={'#EAE41E'}>{tickect?.count} pcs</Text>
                 </Box>
               </VStack>
               <VStack space={3}>
@@ -72,19 +100,19 @@ const TicketResult = () => {
                   <Text color={'yellow.500'} fontSize={12}>
                     Category
                   </Text>
-                  <Text color={'#EAE41E'}>Action</Text>
+                  <Text color={'#EAE41E'}>{tickect?.genre}</Text>
                 </Box>
                 <Box>
                   <Text color={'yellow.500'} fontSize={12}>
                     Time
                   </Text>
-                  <Text color={'#EAE41E'}>2:00pm</Text>
+                  <Text color={'#EAE41E'}>{tickect?.showtimeName}</Text>
                 </Box>
                 <Box>
                   <Text color={'yellow.500'} fontSize={12}>
                     Seats
                   </Text>
-                  <Text color={'#EAE41E'}>C4, C5, C6</Text>
+                  <Text color={'#EAE41E'}>{tickect?.seat}</Text>
                 </Box>
               </VStack>
             </HStack>
@@ -93,7 +121,7 @@ const TicketResult = () => {
                 Total
               </Text>
               <Text color={'#EAE41E'} fontWeight={'bold'}>
-                $30.00
+                $ {tickect?.total}
               </Text>
             </HStack>
           </VStack>

@@ -10,9 +10,14 @@ const authConfig = {
   storage: AsyncStorage,
 };
 
+const transactionConfig = {
+  key: 'transaction',
+  storage: AsyncStorage,
+};
+
 const reducer = combineReducers({
   auth: persistReducer(authConfig, auth),
-  transaction: transaction,
+  transaction: persistReducer(transactionConfig, transaction),
 });
 
 export default reducer;

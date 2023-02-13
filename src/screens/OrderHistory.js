@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React from 'react';
 
 import Navbar from '../components/Navbar';
@@ -17,9 +18,31 @@ import {
 } from 'native-base';
 
 import {useNavigation} from '@react-navigation/native';
+import {useSelector} from 'react-redux';
+import jwtDecode from 'jwt-decode';
+import http from '../helpers/http';
 
 const OrderHistory = () => {
+  const token = useSelector(state => state.auth.token);
+  const idUser = jwtDecode(token).id;
+  const today = new Date();
   const navigation = useNavigation();
+
+  //get history
+  const [history, setHistory] = React.useState([]);
+  const getHistory = async () => {
+    try {
+      const {data} = await http(token).get('/orders/byUser/' + idUser);
+      setHistory(data.results);
+    } catch (error) {
+      setHistory();
+    }
+  };
+
+  React.useEffect(() => {
+    getHistory();
+  }, []);
+
   return (
     <Box>
       <ScrollView>
@@ -47,72 +70,61 @@ const OrderHistory = () => {
             Order History
           </Text>
         </HStack>
-        <Box bgColor={'#18181B'} px={5} py={5}>
-          <VStack
-            bgColor={'black'}
-            space={5}
-            p={5}
-            borderRadius={'10px'}
-            my={5}>
-            <VStack space={3}>
-              <Box>
-                <Image
-                  source={LogoCineone}
-                  alt={'cineone'}
-                  resizeMode={'contain'}
-                />
-              </Box>
-              <Text color={'yellow.500'}>Tuesday, 07 July 2020 - 04:30pm</Text>
-              <Text color={'#EAE41E'} fontSize={20}>
-                Spider-Man: Homecoming
-              </Text>
+        {history?.map((data, index) => (
+          <Box key={index} bgColor={'#18181B'} px={5} py={5}>
+            <VStack
+              bgColor={'black'}
+              space={5}
+              p={5}
+              borderRadius={'10px'}
+              my={5}>
+              <VStack space={3}>
+                <Box>
+                  <Image
+                    source={LogoCineone}
+                    alt={'cineone'}
+                    resizeMode={'contain'}
+                  />
+                </Box>
+                <Text color={'yellow.500'}>
+                  {new Date(data?.dateAndTime).toDateString()} -{' '}
+                  {data?.showtimeName}
+                </Text>
+                <Text color={'#EAE41E'} fontSize={20}>
+                  {data.titleMovie}
+                </Text>
+              </VStack>
+              <Box
+                flex={1}
+                borderBottomWidth={'1'}
+                borderBottomColor={'yellow.500'}
+              />
+              {new Date(data?.dateAndTime) >= today ? (
+                <Button
+                  onPress={() =>
+                    navigation.navigate('TicketResult', {
+                      id: data.idOrder,
+                    })
+                  }
+                  bgColor={'green.500'}
+                  _pressed={{bgColor: 'green.800'}}>
+                  <Text color={'black'}>Ticket in active</Text>
+                </Button>
+              ) : (
+                <Button
+                  onPress={() =>
+                    navigation.navigate('TicketResult', {
+                      id: data.idOrder,
+                    })
+                  }
+                  bgColor={'red.500'}
+                  _pressed={{bgColor: 'red.800'}}>
+                  <Text color={'black'}>Ticket in Expired</Text>
+                </Button>
+              )}
             </VStack>
-            <Box
-              flex={1}
-              borderBottomWidth={'1'}
-              borderBottomColor={'yellow.500'}
-            />
-            <Button
-              onPress={() => navigation.navigate('TicketResult')}
-              bgColor={'green.500'}
-              _pressed={{bgColor: 'green.800'}}>
-              <Text color={'black'}>Ticket in active</Text>
-            </Button>
-          </VStack>
-        </Box>
-        <Box bgColor={'#18181B'} px={5} py={5}>
-          <VStack
-            bgColor={'black'}
-            space={5}
-            p={5}
-            borderRadius={'10px'}
-            my={5}>
-            <VStack space={3}>
-              <Box>
-                <Image
-                  source={LogoCineone}
-                  alt={'cineone'}
-                  resizeMode={'contain'}
-                />
-              </Box>
-              <Text color={'yellow.500'}>Monday, 14 June 2020 - 02:00pm</Text>
-              <Text color={'#EAE41E'} fontSize={20}>
-                Avengers: End Game
-              </Text>
-            </VStack>
-            <Box
-              flex={1}
-              borderBottomWidth={'1'}
-              borderBottomColor={'yellow.500'}
-            />
-            <Button
-              onPress={() => navigation.navigate('TicketResult')}
-              bgColor={'red.500'}
-              _pressed={{bgColor: 'red.800'}}>
-              <Text color={'black'}>Ticket in active</Text>
-            </Button>
-          </VStack>
-        </Box>
+          </Box>
+        ))}
         <Fotter />
       </ScrollView>
     </Box>

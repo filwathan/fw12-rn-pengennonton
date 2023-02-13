@@ -1,10 +1,11 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React from 'react';
 import Navbar from '../components/Navbar';
 import Fotter from '../components/Fotter';
 import Seat from '../components/Seat';
 import Icon from 'react-native-vector-icons/dist/Feather';
 
-import LogoEbuid from '../assets/images/logo-cineone21.png';
+import LogoEbuid from '../assets/images/logo-ebuid1.png';
 
 import {
   Text,
@@ -17,9 +18,74 @@ import {
 } from 'native-base';
 
 import {useNavigation} from '@react-navigation/native';
+import {useSelector} from 'react-redux';
+import {useDispatch} from 'react-redux';
+import {addSeatTransaction} from '../redux/reducers/transactionReducers';
+import http from '../helpers/http';
 
 const OrderPage = () => {
+  const token = useSelector(state => state.auth.token);
   const navigation = useNavigation();
+  const dispacth = useDispatch();
+  const transaction = useSelector(state => state.transaction);
+  const [selected, setSelected] = React.useState([]);
+  const [movie, setMovie] = React.useState({});
+  const [premier, setPremier] = React.useState({});
+  const [showtime, setShowtime] = React.useState({});
+  console.log('refresh');
+
+  const onChangeSeat = seatNum => {
+    if (selected.includes(seatNum)) {
+      setSelected(selected.filter(o => o !== seatNum));
+    } else {
+      setSelected([...selected, seatNum]);
+    }
+  };
+
+  const getMovie = async () => {
+    try {
+      const {data} = await http(token).get('/movies/' + transaction.idMovie);
+      setMovie(data.results);
+    } catch (error) {
+      setMovie({});
+    }
+  };
+  const getPremiere = async () => {
+    try {
+      const {data} = await http(token).get(
+        '/premieres/' + transaction.idPremiere,
+      );
+      setPremier(data.results);
+    } catch (error) {
+      setPremier({});
+    }
+  };
+  const getShowtime = async () => {
+    try {
+      const {data} = await http(token).get(
+        '/showtimes/' + transaction.idShowtime,
+      );
+      setShowtime(data.results);
+    } catch (error) {
+      setShowtime({});
+    }
+  };
+
+  const goTrxAddSeat = (seatSeleceted, total) => {
+    const params = {
+      seat: seatSeleceted,
+      total: total,
+    };
+    console.log(params);
+    dispacth(addSeatTransaction(params));
+    navigation.navigate('PaymentPage');
+  };
+  React.useEffect(() => {
+    getMovie();
+    getPremiere();
+    getShowtime();
+  }, []);
+
   return (
     <Box>
       <ScrollView>
@@ -40,25 +106,10 @@ const OrderPage = () => {
               borderLeftColor={'green.500'}
               borderBottomWidth={'2'}
               borderBottomColor={'red.500'}
+              space={2}
               p={2}>
-              <VStack space={1} flex={1}>
-                <Seat />
-                <Seat />
-                <Seat />
-                <Seat />
-                <Seat />
-                <Seat />
-                <Seat />
-              </VStack>
-              <VStack space={1}>
-                <Seat />
-                <Seat />
-                <Seat />
-                <Seat />
-                <Seat />
-                <Seat />
-                <Seat />
-              </VStack>
+              <Seat selected={selected} onChange={onChangeSeat} />
+              <Seat selected={selected} onChange={onChangeSeat} startNum={8} />
             </HStack>
             <Text flex={1} color={'#EAE41E'}>
               Seating key
@@ -109,17 +160,17 @@ const OrderPage = () => {
               textAlign={'center'}
               fontWeight={'bold'}
               fontSize={32}>
-              CineOne21 Cinema
+              {premier.premiereName} Cinema
             </Text>
             <Text color={'yellow.500'} textAlign={'center'} fontWeight={'bold'}>
-              Spider-Man: Homecoming
+              {movie?.titleMovie}
             </Text>
             <HStack>
               <Text flex={1} color={'yellow.500'}>
-                Tuesday, 07 July 2020
+                {transaction?.dateAndTime?.toDateString()}
               </Text>
               <Text color={'#EAE41E'} fontWeight={'bold'}>
-                02:00
+                {showtime.showtimeName}
               </Text>
             </HStack>
             <HStack>
@@ -127,7 +178,7 @@ const OrderPage = () => {
                 One ticket price
               </Text>
               <Text color={'#EAE41E'} fontWeight={'bold'}>
-                $10
+                $ {movie.price}
               </Text>
             </HStack>
             <HStack>
@@ -135,7 +186,7 @@ const OrderPage = () => {
                 Seat choosed
               </Text>
               <Text color={'#EAE41E'} fontWeight={'bold'}>
-                C4, C5, C6
+                {selected.join(', ')}
               </Text>
             </HStack>
             <Box borderBottomWidth={'1'} borderBottomColor={'yellow.500'} />
@@ -144,12 +195,15 @@ const OrderPage = () => {
                 Total Payment
               </Text>
               <Text color={'#EAE41E'} fontWeight={'bold'} fontSize={20}>
-                $30
+                $ {selected.length * movie.price}
               </Text>
             </HStack>
           </VStack>
           <Button
-            onPress={() => navigation.navigate('PaymentPage')}
+            onPress={() => {
+              goTrxAddSeat(selected, selected.length * movie.price);
+              // console.log(selected.length * movie.price);
+            }}
             mt={10}
             bgColor={'#EAE41E'}
             _pressed={{bgColor: 'yellow.500'}}>

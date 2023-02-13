@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import Navbar from '../components/Navbar';
 import Fotter from '../components/Fotter';
 
@@ -7,6 +8,7 @@ import lionking from '../assets/images/lion-king.png';
 import React from 'react';
 
 import {useNavigation} from '@react-navigation/native';
+import {useSelector} from 'react-redux';
 
 import http from '../helpers/http';
 
@@ -25,6 +27,7 @@ import {
 } from 'native-base';
 
 const ViewAll = () => {
+  const token = useSelector(state => state.auth.token);
   const navigation = useNavigation();
   const [movie, setMovie] = React.useState([]);
   const [sort, setSort] = React.useState('');
@@ -40,8 +43,8 @@ const ViewAll = () => {
 
   const getAllMovie = async () => {
     try {
-      const {data} = await http().get('/movies/semua');
-      // const {data} = await http().get(
+      const {data} = await http(token).get('/movies/semua');
+      // const {data} = await http(token).get(
       //   `/movies?page=${1}&limit=${2}&search=${3}&sortBy=${4}&sort=${5}`,
       //   page,
       //   limit,

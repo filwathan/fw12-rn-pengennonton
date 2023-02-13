@@ -54,7 +54,7 @@ const MovieDetails = () => {
 
   const getDetail = async () => {
     try {
-      const {data} = await http().get('/movies/detail/' + idMovie);
+      const {data} = await http(token).get('/movies/detail/' + idMovie);
       setDetail(data.results);
     } catch (error) {
       setDetail({});
@@ -63,7 +63,7 @@ const MovieDetails = () => {
 
   const getCityList = async () => {
     try {
-      const {data} = await http().get('/locations');
+      const {data} = await http(token).get('/locations');
       setGetCity(data.results);
     } catch (error) {
       setGetCity([]);
@@ -72,7 +72,7 @@ const MovieDetails = () => {
 
   const getPremieresAdress = async () => {
     try {
-      const {data} = await http().get(
+      const {data} = await http(token).get(
         '/premieres/premiereLocationByMovie/' + idMovie,
       );
       setAdress(data.results);
@@ -110,7 +110,12 @@ const MovieDetails = () => {
                 borderColor={'#18181B'}
                 borderRadius={'10px'}
                 p={5}>
-                <Image source={spiderman} alt={'spiderman'} />
+                <Image
+                  source={{uri: detail?.picture} || spiderman}
+                  alt={detail?.titleMovie}
+                  width={'150px'}
+                  height={'250px'}
+                />
               </Box>
               <Box>
                 <Text
