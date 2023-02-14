@@ -65,11 +65,6 @@ const Profil = () => {
   const [confirmShow, setConfirmShow] = React.useState(true);
   const navigation = useNavigation();
 
-  React.useEffect(() => {
-    getProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
-
   const getProfile = async () => {
     try {
       const {data} = await http(token).get('/users/' + userId);
@@ -99,6 +94,77 @@ const Profil = () => {
       console.log(error);
     }
   };
+
+  //reset password
+  const [errorResetPassword, SetErrorResetPassword] = React.useState('');
+  const resetPassword = async value => {
+    console.log('hit');
+    if (value.password !== value.confirmPassword) {
+      SetErrorResetPassword('password must be match');
+    } else {
+      try {
+        const {data} = await http(token).patch('/users/' + userId, value);
+        SetErrorResetPassword(data.message);
+      } catch (error) {
+        console.log('error');
+      }
+    }
+  };
+
+  //open camgal
+  const [camgal, setCamgal] = React.useState(false);
+
+  //open camera
+  const openCamera = async () => {
+    const pic = await launchCamera();
+    uploadPhoto(pic.assets[0]);
+  };
+
+  //open galery
+  const openGalery = async () => {
+    const pic = await launchImageLibrary();
+    uploadPhoto(pic.assets[0]);
+  };
+
+  //upload photo
+  const [errorUploadPhoto, setErrorUploadPhoto] = React.useState('');
+  const uploadPhoto = async picture => {
+    const type = ['jpeg', 'jpg', 'pgn'];
+    if (type.includes(picture.type.slice(6))) {
+      if (picture.fileSize <= 5000000) {
+        try {
+          const form = new FormData();
+          form.append('picture', {
+            name: picture.fileName,
+            type: picture.type,
+            uri: picture.uri,
+          });
+          const {data} = await http(token).patch('/users/' + userId, form, {
+            headers: {
+              'Content-type': 'multipart/form-data',
+            },
+          });
+          setUser(data.results);
+          setCamgal(!camgal);
+          setErrorUploadPhoto('');
+        } catch (error) {
+          console.log(error);
+        }
+      } else {
+        setCamgal(!camgal);
+        setErrorUploadPhoto('file size must under 5MB');
+      }
+    } else {
+      setCamgal(!camgal);
+      setErrorUploadPhoto('file extention must jpeg, jpg, or png');
+    }
+  };
+
+  React.useEffect(() => {
+    getProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, errorResetPassword]);
+
   return (
     <Box>
       <ScrollView>
@@ -136,13 +202,40 @@ const Profil = () => {
             <VStack space={3}>
               <Text color={'yellow.500'}>INFO</Text>
               <Box alignItems={'center'}>
-                <Image
-                  source={{uri: user.picture} || profil}
-                  alt={'cineone'}
-                  resizeMode={'contain'}
-                  size={150}
-                  borderRadius={100}
-                />
+                <Pressable onPress={() => setCamgal(!camgal)}>
+                  <Image
+                    source={{uri: user.picture} || profil}
+                    alt={'cineone'}
+                    resizeMode={'contain'}
+                    size={150}
+                    borderRadius={100}
+                  />
+                </Pressable>
+                {errorUploadPhoto && (
+                  <Text py={2} fontSize={'20px'} color={'red.500'}>
+                    {errorUploadPhoto}
+                  </Text>
+                )}
+                {camgal && (
+                  <Box>
+                    <VStack>
+                      <Pressable
+                        onPress={openCamera}
+                        _pressed={{bg: 'yellow.500'}}>
+                        <Text py={2} fontSize={'20px'} color={'yellow.700'}>
+                          Camera
+                        </Text>
+                      </Pressable>
+                      <Pressable
+                        onPress={openGalery}
+                        _pressed={{bg: 'yellow.500'}}>
+                        <Text py={2} fontSize={'20px'} color={'yellow.700'}>
+                          Galery
+                        </Text>
+                      </Pressable>
+                    </VStack>
+                  </Box>
+                )}
               </Box>
               <Text color={'#EAE41E'} fontSize={20} textAlign={'center'}>
                 {user.firstName + ' ' + user.lastName}
@@ -218,112 +311,118 @@ const Profil = () => {
             <Text color={'black'}>Update changes</Text>
           </Button>
           {/* resset password */}
-          <VStack
-            bgColor={'black'}
-            space={5}
-            p={5}
-            borderRadius={'10px'}
-            my={10}>
-            <Formik
-              validationSchema={resetPasswordSchema}
-              initialValues={{
-                password: '',
-                confirmPassword: '',
-              }}>
-              {({handleChange, handleBlur, handleSubmit, errors, values}) => (
-                <Stack space={3}>
-                  <Box>
-                    <Text color={'#EAE41E'}>Account and Privacy</Text>
-                    <Box
-                      flex={1}
-                      borderBottomWidth={'1'}
-                      borderBottomColor={'yellow.500'}
-                    />
-                  </Box>
-                  <FormControl isInvalid={errors.password}>
-                    <FormControl.Label>
-                      <Text color={'#EAE41E'}>password</Text>
-                    </FormControl.Label>
-                    <Input
-                      type={show ? 'password' : 'text'}
-                      InputRightElement={
-                        <Pressable
-                          height={'full'}
-                          width={10}
-                          justifyContent={'center'}
-                          alignItems={'center'}
-                          mr={2}
-                          color={'#EAE41E'}
-                          onPress={() => {
-                            setShow(!show);
-                          }}>
-                          <Icon
-                            name={show ? 'eye-off' : 'eye'}
-                            color={'gold'}
-                          />
-                        </Pressable>
-                      }
-                      height={12}
-                      color={'#EAE41E'}
-                      onChangeText={handleChange('password')}
-                      onBlur={handleBlur('password')}
-                      placeholder="Write your password"
-                      value={values.password}
-                    />
-                    {errors.password && (
-                      <FormControl.ErrorMessage
-                        leftIcon={<WarningOutlineIcon size="xs" />}>
-                        {errors.password}
-                      </FormControl.ErrorMessage>
+          <Formik
+            validationSchema={resetPasswordSchema}
+            onSubmit={resetPassword}
+            initialValues={{
+              password: '',
+              confirmPassword: '',
+            }}>
+            {({handleChange, handleBlur, handleSubmit, errors, values}) => (
+              <Box>
+                <VStack
+                  bgColor={'black'}
+                  space={5}
+                  p={5}
+                  borderRadius={'10px'}
+                  my={10}>
+                  <Stack space={3}>
+                    <Box>
+                      <Text color={'#EAE41E'}>Account and Privacy</Text>
+                      <Box
+                        flex={1}
+                        borderBottomWidth={'1'}
+                        borderBottomColor={'yellow.500'}
+                      />
+                    </Box>
+                    {errorResetPassword && (
+                      <Text color={'red.500'}>{errorResetPassword}</Text>
                     )}
-                  </FormControl>
-                  <FormControl isInvalid={errors.confirmPassword}>
-                    <FormControl.Label>
-                      <Text color={'#EAE41E'}>confirmPassword</Text>
-                    </FormControl.Label>
-                    <Input
-                      type={show ? 'password' : 'text'}
-                      InputRightElement={
-                        <Pressable
-                          height={'full'}
-                          width={10}
-                          justifyContent={'center'}
-                          alignItems={'center'}
-                          mr={2}
-                          color={'#EAE41E'}
-                          onPress={() => {
-                            setConfirmShow(!confirmShow);
-                          }}>
-                          <Icon
-                            name={confirmShow ? 'eye-off' : 'eye'}
-                            color={'gold'}
-                          />
-                        </Pressable>
-                      }
-                      height={12}
-                      color={'#EAE41E'}
-                      onChangeText={handleChange('confirmPassword')}
-                      onBlur={handleBlur('confirmPassword')}
-                      placeholder="Write your confirmPassword"
-                      value={values.password}
-                    />
-                    {errors.confirmPassword && (
-                      <FormControl.ErrorMessage
-                        leftIcon={<WarningOutlineIcon size="xs" />}>
-                        {errors.confirmPassword}
-                      </FormControl.ErrorMessage>
-                    )}
-                  </FormControl>
-                </Stack>
-              )}
-            </Formik>
-          </VStack>
-          <Button
-            onPress={() => dispatch(logoutAction())}
-            bgColor={'#EAE41E'}
-            _pressed={{bgColor: 'yellow.500'}}>
-            <Text color={'black'}>Update changes</Text>
-          </Button>
+                    <FormControl isInvalid={errors.password}>
+                      <FormControl.Label>
+                        <Text color={'#EAE41E'}>password</Text>
+                      </FormControl.Label>
+                      <Input
+                        type={show ? 'password' : 'text'}
+                        InputRightElement={
+                          <Pressable
+                            height={'full'}
+                            width={10}
+                            justifyContent={'center'}
+                            alignItems={'center'}
+                            mr={2}
+                            color={'#EAE41E'}
+                            onPress={() => {
+                              setShow(!show);
+                            }}>
+                            <Icon
+                              name={show ? 'eye-off' : 'eye'}
+                              color={'gold'}
+                            />
+                          </Pressable>
+                        }
+                        height={12}
+                        color={'#EAE41E'}
+                        onChangeText={handleChange('password')}
+                        onBlur={handleBlur('password')}
+                        placeholder="Write your password"
+                        // value={values.password}
+                      />
+                      {errors.password && (
+                        <FormControl.ErrorMessage
+                          leftIcon={<WarningOutlineIcon size="xs" />}>
+                          {errors.password}
+                        </FormControl.ErrorMessage>
+                      )}
+                    </FormControl>
+                    <FormControl isInvalid={errors.confirmPassword}>
+                      <FormControl.Label>
+                        <Text color={'#EAE41E'}>confirmPassword</Text>
+                      </FormControl.Label>
+                      <Input
+                        type={show ? 'password' : 'text'}
+                        InputRightElement={
+                          <Pressable
+                            height={'full'}
+                            width={10}
+                            justifyContent={'center'}
+                            alignItems={'center'}
+                            mr={2}
+                            color={'#EAE41E'}
+                            onPress={() => {
+                              setConfirmShow(!confirmShow);
+                            }}>
+                            <Icon
+                              name={confirmShow ? 'eye-off' : 'eye'}
+                              color={'gold'}
+                            />
+                          </Pressable>
+                        }
+                        height={12}
+                        color={'#EAE41E'}
+                        onChangeText={handleChange('confirmPassword')}
+                        onBlur={handleBlur('confirmPassword')}
+                        placeholder="Write your confirmPassword"
+                        // value={values.password}
+                      />
+                      {errors.confirmPassword && (
+                        <FormControl.ErrorMessage
+                          leftIcon={<WarningOutlineIcon size="xs" />}>
+                          {errors.confirmPassword}
+                        </FormControl.ErrorMessage>
+                      )}
+                    </FormControl>
+                  </Stack>
+                </VStack>
+                <Button
+                  onPress={handleSubmit}
+                  bgColor={'#EAE41E'}
+                  _pressed={{bgColor: 'yellow.500'}}>
+                  <Text color={'black'}>Update changes</Text>
+                </Button>
+              </Box>
+            )}
+          </Formik>
         </Box>
         <Fotter />
       </ScrollView>
