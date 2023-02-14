@@ -29,21 +29,23 @@ import {
 const ViewAll = () => {
   const token = useSelector(state => state.auth.token);
   const navigation = useNavigation();
-  const [movie, setMovie] = React.useState([]);
-  const [sort, setSort] = React.useState('');
-  const [month, setMonth] = React.useState(8);
+  const [movie, setMovie] = React.useState({});
   const [page, setPage] = React.useState(1);
-  const [limit, setLimit] = React.useState(1);
+  const [totalPage, setTotalPage] = React.useState(1);
+  const [limit, setLimit] = React.useState(4);
   const [search, setSearch] = React.useState('');
   const [sortBy, setSortBy] = React.useState('');
+  const [sort, setSort] = React.useState('ASC');
+  const [month, setMonth] = React.useState(8);
+  console.log(search);
 
-  React.useEffect(() => {
-    getAllMovie();
-  }, []);
-
+  //get all movie
   const getAllMovie = async () => {
     try {
-      const {data} = await http(token).get('/movies/semua');
+      // const {data} = await http(token).get('/movies/semua');
+      const {data} = await http(token).get(
+        `/movies/semua?page=${page}&limit=${limit}&search=${search}&sortBy=${sortBy}&sort=${sort}`,
+      );
       // const {data} = await http(token).get(
       //   `/movies?page=${1}&limit=${2}&search=${3}&sortBy=${4}&sort=${5}`,
       //   page,
@@ -52,11 +54,48 @@ const ViewAll = () => {
       //   sortBy,
       //   sort,
       // );
+      // console.log(data.results);
+      setTotalPage(data.pageInfo.totalPage);
       setMovie(data.results);
     } catch (error) {
-      setMovie([]);
+      setMovie({});
     }
   };
+
+  //search
+  const seaching = value => {
+    // setSearch(e.target.value);
+    console.log(value);
+  };
+
+  //sort
+  const sorting = value => {
+    // setSort(e.target.value);
+    console.log(value);
+  };
+
+  //add
+  const add = () => {
+    if (page < totalPage) {
+      setPage(page + 1);
+    } else {
+      setPage(page);
+    }
+  };
+
+  //minus
+  const minus = () => {
+    if (page > 1) {
+      setPage(page - 1);
+    } else {
+      setPage(page);
+    }
+  };
+
+  React.useEffect(() => {
+    getAllMovie();
+    console.log(search);
+  }, [page, limit, search, sortBy, sort, totalPage]);
 
   return (
     <Box>
@@ -76,10 +115,12 @@ const ViewAll = () => {
               accessibilityLabel={'pilih berdasarkan'}
               placeholder={'Sort'}
               onValueChange={value => setSort(value)}>
-              <Select.Item label={'title'} value={'title'} />
-              <Select.Item label={'genre'} value={'genre'} />
+              <Select.Item label={'A~Z a~z'} value={'ASC'} />
+              <Select.Item label={'z~a Z~A'} value={'DESC'} />
             </Select>
             <Input
+              onChangeText={value => setSearch(value)}
+              // onValueChange={seaching}
               flex={1}
               placeholder={'Search Movie Name..'}
               bgColor={'black'}
@@ -202,8 +243,42 @@ const ViewAll = () => {
           </ScrollView>
           {/* film */}
           <VStack space={1}>
-            <HStack space={1}>
-              <VStack
+            <HStack space={1} flexWrap={'wrap'}>
+              {movie?.map((data, index) => (
+                <VStack
+                  key={index}
+                  space={2}
+                  width={'180px'}
+                  borderWidth={2}
+                  bgColor={'black'}
+                  borderColor={'#101012'}
+                  borderRadius={'10px'}
+                  p={3}>
+                  <Image
+                    source={{uri: data.picture} || spiderman}
+                    alt={'spiderman'}
+                    width={'full'}
+                    height={'250px'}
+                  />
+                  <Text color={'#EAE41E'} textAlign={'center'}>
+                    {data?.titleMovie}
+                  </Text>
+                  <Text color={'yellow.500'} textAlign={'center'} height={16}>
+                    {data?.genre}
+                  </Text>
+                  <Button
+                    onPress={() =>
+                      // navigation.navigate('MovieDetails', {id: movie[0]?.idMovie})
+                      navigation.navigate('MovieDetails')
+                    }
+                    mt={10}
+                    bgColor={'#EAE41E'}
+                    _pressed={{bgColor: 'yellow.500'}}>
+                    <Text color={'black'}>Detail</Text>
+                  </Button>
+                </VStack>
+              ))}
+              {/* <VStack
                 space={2}
                 width={'1/2'}
                 borderWidth={2}
@@ -214,22 +289,23 @@ const ViewAll = () => {
                 <Image source={spiderman} alt={'spiderman'} />
 
                 <Text color={'#EAE41E'} textAlign={'center'}>
-                  {movie[0]?.titleMovie}
+                  {'movie[0]?.titleMovie'}
                 </Text>
                 <Text color={'yellow.500'} textAlign={'center'} height={16}>
-                  {movie[0]?.genre}
+                  {'movie[0]?.genre'}
                 </Text>
                 <Button
                   onPress={() =>
-                    navigation.navigate('MovieDetails', {id: movie[0]?.idMovie})
+                    // navigation.navigate('MovieDetails', {id: movie[0]?.idMovie})
+                    navigation.navigate('MovieDetails')
                   }
                   mt={10}
                   bgColor={'#EAE41E'}
                   _pressed={{bgColor: 'yellow.500'}}>
                   <Text color={'black'}>Detail</Text>
                 </Button>
-              </VStack>
-              <VStack
+              </VStack> */}
+              {/* <VStack
                 space={2}
                 width={'1/2'}
                 borderWidth={2}
@@ -240,10 +316,10 @@ const ViewAll = () => {
                 <Image source={lionking} alt={'lionking'} />
 
                 <Text color={'#EAE41E'} textAlign={'center'}>
-                  {movie[1].titleMovie}
+                  {'movie[1].titleMovie'}
                 </Text>
                 <Text color={'yellow.500'} textAlign={'center'} height={16}>
-                  {movie[1].genre}
+                  {'movie[1].genre'}
                 </Text>
                 <Button
                   onPress={() =>
@@ -254,101 +330,42 @@ const ViewAll = () => {
                   _pressed={{bgColor: 'yellow.500'}}>
                   <Text color={'black'}>Detail</Text>
                 </Button>
-              </VStack>
-            </HStack>
-            <HStack space={1}>
-              <VStack
-                space={2}
-                width={'1/2'}
-                borderWidth={2}
-                bgColor={'black'}
-                borderColor={'#101012'}
-                borderRadius={'10px'}
-                p={3}>
-                <Image source={spiderman} alt={'spiderman'} />
-
-                <Text color={'#EAE41E'} textAlign={'center'}>
-                  {movie[2].titleMovie}
-                </Text>
-                <Text color={'yellow.500'} textAlign={'center'} height={16}>
-                  {movie[2].genre}
-                </Text>
-                <Button
-                  onPress={() =>
-                    navigation.navigate('MovieDetails', {id: movie[2].idMovie})
-                  }
-                  mt={10}
-                  bgColor={'#EAE41E'}
-                  _pressed={{bgColor: 'yellow.500'}}>
-                  <Text color={'black'}>Detail</Text>
-                </Button>
-              </VStack>
-              <VStack
-                space={2}
-                width={'1/2'}
-                borderWidth={2}
-                bgColor={'black'}
-                borderColor={'#101012'}
-                borderRadius={'10px'}
-                p={3}>
-                <Image source={lionking} alt={'lionking'} />
-
-                <Text color={'#EAE41E'} textAlign={'center'}>
-                  {movie[3].titleMovie}
-                </Text>
-                <Text color={'yellow.500'} textAlign={'center'} height={16}>
-                  {movie[3].genre}
-                </Text>
-                <Button
-                  onPress={() =>
-                    navigation.navigate('MovieDetails', {id: movie[3].idMovie})
-                  }
-                  mt={10}
-                  bgColor={'#EAE41E'}
-                  _pressed={{bgColor: 'yellow.500'}}>
-                  <Text color={'black'}>Detail</Text>
-                </Button>
-              </VStack>
+              </VStack> */}
             </HStack>
           </VStack>
           {/* page navigation */}
           <Center mt={5}>
             <HStack space={3}>
               <Pressable
-                onPress={() => {
-                  setPage(1);
-                }}
+                onPress={minus}
                 justifyContent={'center'}
                 alignItems={'center'}
                 width={10}
                 height={10}
                 borderRadius={'10px'}
-                bgColor={page === 1 ? '#EAE41E' : 'black'}>
-                <Text color={page === 1 ? 'black' : '#EAE41E'}>1</Text>
+                _pressed={{bgColor: 'yellow.700'}}
+                bgColor={'black'}>
+                <Text color={'#EAE41E'}>-</Text>
               </Pressable>
-              <Pressable
-                onPress={() => {
-                  setPage(2);
-                }}
+              <Box
                 justifyContent={'center'}
                 alignItems={'center'}
                 width={10}
                 height={10}
                 borderRadius={'10px'}
-                bgColor={page === 2 ? '#EAE41E' : 'black'}>
-                <Text color={page === 2 ? 'black' : '#EAE41E'}>2</Text>
-              </Pressable>
+                bgColor={'#EAE41E'}>
+                <Text color={'black'}>{page}</Text>
+              </Box>
               <Pressable
-                onPress={() => {
-                  setPage(3);
-                }}
+                onPress={add}
                 justifyContent={'center'}
                 alignItems={'center'}
                 width={10}
                 height={10}
                 borderRadius={'10px'}
-                bgColor={page === 3 ? '#EAE41E' : 'black'}>
-                <Text color={page === 3 ? 'black' : '#EAE41E'}>3</Text>
+                _pressed={{bgColor: 'yellow.700'}}
+                bgColor={'black'}>
+                <Text color={'#EAE41E'}>+</Text>
               </Pressable>
             </HStack>
           </Center>
