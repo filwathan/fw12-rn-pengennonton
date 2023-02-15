@@ -29,7 +29,7 @@ import {
 const ViewAll = () => {
   const token = useSelector(state => state.auth.token);
   const navigation = useNavigation();
-  const [movie, setMovie] = React.useState({});
+  const [movie, setMovie] = React.useState([]);
   const [page, setPage] = React.useState(1);
   const [totalPage, setTotalPage] = React.useState(1);
   const [limit, setLimit] = React.useState(4);
@@ -42,36 +42,14 @@ const ViewAll = () => {
   //get all movie
   const getAllMovie = async () => {
     try {
-      // const {data} = await http(token).get('/movies/semua');
       const {data} = await http(token).get(
         `/movies/semua?page=${page}&limit=${limit}&search=${search}&sortBy=${sortBy}&sort=${sort}`,
       );
-      // const {data} = await http(token).get(
-      //   `/movies?page=${1}&limit=${2}&search=${3}&sortBy=${4}&sort=${5}`,
-      //   page,
-      //   limit,
-      //   search,
-      //   sortBy,
-      //   sort,
-      // );
-      // console.log(data.results);
       setTotalPage(data.pageInfo.totalPage);
       setMovie(data.results);
     } catch (error) {
       setMovie({});
     }
-  };
-
-  //search
-  const seaching = value => {
-    // setSearch(e.target.value);
-    console.log(value);
-  };
-
-  //sort
-  const sorting = value => {
-    // setSort(e.target.value);
-    console.log(value);
   };
 
   //add
@@ -120,7 +98,6 @@ const ViewAll = () => {
             </Select>
             <Input
               onChangeText={value => setSearch(value)}
-              // onValueChange={seaching}
               flex={1}
               placeholder={'Search Movie Name..'}
               bgColor={'black'}
@@ -244,40 +221,46 @@ const ViewAll = () => {
           {/* film */}
           <VStack space={1}>
             <HStack space={1} flexWrap={'wrap'}>
-              {movie?.map((data, index) => (
-                <VStack
-                  key={index}
-                  space={2}
-                  width={'180px'}
-                  borderWidth={2}
-                  bgColor={'black'}
-                  borderColor={'#101012'}
-                  borderRadius={'10px'}
-                  p={3}>
-                  <Image
-                    source={{uri: data.picture} || spiderman}
-                    alt={'spiderman'}
-                    width={'full'}
-                    height={'250px'}
-                  />
-                  <Text color={'#EAE41E'} textAlign={'center'}>
-                    {data?.titleMovie}
-                  </Text>
-                  <Text color={'yellow.500'} textAlign={'center'} height={16}>
-                    {data?.genre}
-                  </Text>
-                  <Button
-                    onPress={() =>
-                      // navigation.navigate('MovieDetails', {id: movie[0]?.idMovie})
-                      navigation.navigate('MovieDetails')
-                    }
-                    mt={10}
-                    bgColor={'#EAE41E'}
-                    _pressed={{bgColor: 'yellow.500'}}>
-                    <Text color={'black'}>Detail</Text>
-                  </Button>
-                </VStack>
-              ))}
+              {movie ? (
+                movie?.map((data, index) => (
+                  <VStack
+                    key={index}
+                    space={2}
+                    width={'180px'}
+                    borderWidth={2}
+                    bgColor={'black'}
+                    borderColor={'#101012'}
+                    borderRadius={'10px'}
+                    p={3}>
+                    <Image
+                      source={{uri: data.picture} || spiderman}
+                      alt={'spiderman'}
+                      width={'full'}
+                      height={'250px'}
+                    />
+                    <Text color={'#EAE41E'} textAlign={'center'}>
+                      {data?.titleMovie}
+                    </Text>
+                    <Text color={'yellow.500'} textAlign={'center'} height={16}>
+                      {data?.genre}
+                    </Text>
+                    <Button
+                      onPress={() =>
+                        // navigation.navigate('MovieDetails', {id: movie[0]?.idMovie})
+                        navigation.navigate('MovieDetails')
+                      }
+                      mt={10}
+                      bgColor={'#EAE41E'}
+                      _pressed={{bgColor: 'yellow.500'}}>
+                      <Text color={'black'}>Detail</Text>
+                    </Button>
+                  </VStack>
+                ))
+              ) : (
+                <Text color={'#EAE41E'} textAlign={'center'}>
+                  Data not found
+                </Text>
+              )}
               {/* <VStack
                 space={2}
                 width={'1/2'}

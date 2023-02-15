@@ -40,7 +40,7 @@ const Home = () => {
   const [now, setNow] = React.useState(false);
   const [now1, setNow1] = React.useState(false);
   const [month, setMonth] = React.useState(8);
-  console.log('refresh');
+  console.log('home');
 
   useEffect(() => {
     getNowShowing();
