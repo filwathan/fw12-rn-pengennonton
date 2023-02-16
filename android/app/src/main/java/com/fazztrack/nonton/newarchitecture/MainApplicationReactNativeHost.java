@@ -1,4 +1,4 @@
-package com.pengennonton.newarchitecture;
+package com.fazztrack.nonton.newarchitecture;
 
 import android.app.Application;
 import androidx.annotation.NonNull;
@@ -19,9 +19,9 @@ import com.facebook.react.fabric.CoreComponentsRegistry;
 import com.facebook.react.fabric.FabricJSIModuleProvider;
 import com.facebook.react.fabric.ReactNativeConfig;
 import com.facebook.react.uimanager.ViewManagerRegistry;
-import com.pengennonton.BuildConfig;
-import com.pengennonton.newarchitecture.components.MainComponentsRegistry;
-import com.pengennonton.newarchitecture.modules.MainApplicationTurboModuleManagerDelegate;
+import com.fazztrack.nonton.BuildConfig;
+import com.fazztrack.nonton.newarchitecture.components.MainComponentsRegistry;
+import com.fazztrack.nonton.newarchitecture.modules.MainApplicationTurboModuleManagerDelegate;
 import java.util.ArrayList;
 import java.util.List;
 

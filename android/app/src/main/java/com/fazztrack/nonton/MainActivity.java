@@ -1,4 +1,4 @@
-package com.pengennonton;
+package com.fazztrack.nonton;
 
 import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;
@@ -13,7 +13,7 @@ public class MainActivity extends ReactActivity {
    */
   @Override
   protected String getMainComponentName() {
-    return "pengennonton";
+    return "Pengen Nonton";
   }
 
   @Override

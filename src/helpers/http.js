@@ -1,4 +1,5 @@
 import axios from 'axios';
+import {PENGEN_NONTON} from '@env';
 
 const http = token => {
   const headers = {};
@@ -6,7 +7,7 @@ const http = token => {
     headers.Authorization = 'Bearer ' + token;
   }
   const instance = axios.create({
-    baseURL: 'https://fw12-backend-beryl.vercel.app/',
+    baseURL: PENGEN_NONTON,
     // baseURL: 'http://192.168.1.12:8888',
     headers,
   });

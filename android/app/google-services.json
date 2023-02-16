@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "599075041366",
+    "project_id": "pengen-nonton-4bba0",
+    "storage_bucket": "pengen-nonton-4bba0.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:599075041366:android:fb0933c0e1ed6ea3c30bf7",
+        "android_client_info": {
+          "package_name": "com.fazztrack.nonton"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "599075041366-2831af2rqe0j6ic35jru3gc6ueu8m56e.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAxZvv9Yc0VxP073YhhJlS_yHmR7kFQTjk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "599075041366-2831af2rqe0j6ic35jru3gc6ueu8m56e.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:599075041366:android:69fe2285bfc73d48c30bf7",
+        "android_client_info": {
+          "package_name": "com.fazztrack.pn"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "599075041366-2831af2rqe0j6ic35jru3gc6ueu8m56e.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAxZvv9Yc0VxP073YhhJlS_yHmR7kFQTjk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "599075041366-2831af2rqe0j6ic35jru3gc6ueu8m56e.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -37,6 +37,8 @@ import * as Yup from 'yup';
 import YupPassword from 'yup-password';
 YupPassword(Yup);
 
+import PushNotification from 'react-native-push-notification';
+
 const paymentSchema = Yup.object({
   fullName: Yup.string(),
   phone: Yup.string().min(10, 'min 10 Character').max(13, 'Max 13 Character'),
@@ -82,6 +84,12 @@ const PaymentPage = () => {
       const {data} = await http(token).post('/orders/', wantPay);
       console.log(data.results);
       dispatch(clearTransaction());
+      //notif succes payment
+      PushNotification.localNotification({
+        channelId: 'global_notif',
+        title: 'Pembayaran Berhasil',
+        message: 'Pengen Nonton-nya Tersalurkan kan Prennn? pake ini lagi yak',
+      });
       navigation.navigate('OrderHistory');
     } catch (error) {
       console.log('error');
